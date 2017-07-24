@@ -1,1 +1,10 @@
 # df_weibo_spider
+
+this project, aka df_weibo_spider, is a web spider developed on scrapy 1.4.0 with python 2.7.13.
+
+it has several functions:
+scrape userinfo from '财经' as source (src), and scrape src_follower and followed_by_src items.
+crawl tweets from users.
+
+i use proxy pool so as to improve it's efficient speed wise.
+
