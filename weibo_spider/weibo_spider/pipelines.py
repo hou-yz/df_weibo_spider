@@ -4,9 +4,10 @@
 #
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: http://doc.scrapy.org/en/latest/topics/item-pipeline.html
-import MySQLdb
-from items import userinfoItem, tweetItem
+
+from weibo_spider.items import userinfoItem, tweetItem
 import time
+import pymysql
 
 db_user = 'industry'
 db_pass = '123456industry'
@@ -20,7 +21,7 @@ batch_page_max = 1
 
 class WeiboSpiderPipeline(object):#using df industry as db
     def __init__(self):
-        self.connect = MySQLdb.connect(user=db_user, passwd=db_pass, db=db_name, host=db_host, charset="utf8",  use_unicode=True)
+        self.connect = pymysql.connect(user=db_user, passwd=db_pass, db=db_name, host=db_host, charset="utf8",  use_unicode=True)
         self.cursor = self.connect.cursor()
         # Enforce UTF-8 for the connection.
         self.cursor.execute('SET NAMES utf8mb4')
@@ -123,14 +124,14 @@ class WeiboSpiderPipeline(object):#using df industry as db
 
 
         if self.batched_pages > batch_page_max:
-            print "***********writing %d pages into MYSQL***********" % batch_page_max
+            print ("***********writing %d pages into MYSQL***********" % batch_page_max)
             try:
                 self.cursor.executemany(sql, self.s)
                 self.connect.commit()
-            except MySQLdb.Error, e:
-                print "Error %d: %s" % (e.args[0], e.args[1])
+            except pymysql.InternalError as e:
+                print ("Error %d: %s" % (e.args[0], e.args[1]))
             if len(self.s_edges):
-                print "***********writing %d pages into txt***********" % batch_page_max
+                print ("***********writing %d pages into txt***********" % batch_page_max)
                 try:
                     fp=open("edges.log","ab+")
                     fp.writelines(self.s_edges)

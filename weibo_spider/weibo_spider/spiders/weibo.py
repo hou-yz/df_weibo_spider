@@ -4,7 +4,7 @@ from scrapy.linkextractors import LinkExtractor
 from scrapy.spiders import Spider
 from weibo_spider.items import userinfoItem, tweetItem
 import json
-import MySQLdb
+import pymysql
 import time
 import threading
 
@@ -87,11 +87,11 @@ class WeiboSpider(Spider):
         if self.url_uid not in response._url:
             #multi process communication
             return
-        if u'cards' not in json.loads(response.body):
+        if u'cards' not in json.loads(response.body.decode('utf-8')):
             if self.url_uid in response._url:
                 self.continue_flag = 0
             return
-        if not len(json.loads(response.body)[u'cards']):
+        if not len(json.loads(response.body.decode('utf-8'))[u'cards']):
             if self.url_uid in response._url:
                 self.continue_flag = 0
             return
@@ -101,7 +101,7 @@ class WeiboSpider(Spider):
                 pass
             return
         item = userinfoItem()
-        item['response'] = json.loads(response.body)
+        item['response'] = json.loads(response.body.decode('utf-8'))
         item['kind']=kind
         yield item
         pass
@@ -110,11 +110,11 @@ class WeiboSpider(Spider):
         if self.url_uid not in response._url:
             #multi process communication
             return
-        if u'cards' not in json.loads(response.body):
+        if u'cards' not in json.loads(response.body.decode('utf-8')):
             if self.url_uid in response._url:
                 self.continue_flag = 0
             return
-        if not len(json.loads(response.body)[u'cards']):
+        if not len(json.loads(response.body.decode('utf-8'))[u'cards']):
             if self.url_uid in response._url:
                 self.continue_flag = 0
             return
@@ -123,7 +123,7 @@ class WeiboSpider(Spider):
                 self.continue_flag = 0
             return
         item = tweetItem()
-        item['response']=json.loads(response.body)
+        item['response']=json.loads(response.body.decode('utf-8'))
         yield item
         pass
 
@@ -284,6 +284,6 @@ class WeiboSpider(Spider):
                     if not self.continue_flag:
                         break
                 src_user_number += 1
-                print "***********user_number:%d***************" % src_user_number
+                print ("***********user_number:%d***************" % src_user_number)
 
         pass
