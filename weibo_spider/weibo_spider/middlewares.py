@@ -91,9 +91,9 @@ class ProxyMiddleware(object):
         pass
         allowed_proxy_index = [i for i in range(0, len(self.proxy_pool)) if (self.proxy_allowed[i] and len([j for j in range(0,len(user_agent)) if self.proxy_ua_continuous_error[i][j]>=0 and self.proxy_ua_continuous_error[i][j]<continuous_error_max]))]
         if len(allowed_proxy_index)==0:
-            print "********WARNING: IP BANNED, PAUSE*********"
+            print ("********WARNING: IP BANNED, PAUSE*********")
             sleeptime=60-start_time+max(self.proxy_lastminute)
-            print "sleep:%d" % sleeptime
+            print ("sleep:%d" % sleeptime)
             time.sleep(sleeptime)
             return self.retry_request(request)
         proxy_index = random.sample(allowed_proxy_index, 1)[0]
@@ -117,7 +117,7 @@ class ProxyMiddleware(object):
             if response.status >= 400:
                 if response.status == 414:
                     if self.proxy_allowed[proxy_index]:
-                        print "***********414 at ip%s, url length=%d**************" % (last_proxy,self.proxy_lastminute_url_length[proxy_index])
+                        print ("***********414 at ip%s, url length=%d**************" % (last_proxy,self.proxy_lastminute_url_length[proxy_index]))
                         self.proxy_allowed[proxy_index] = 0
                     #self.update_proxy(u'IP_BANNED', request, response_status_message(response.status))
                 if self.proxy_ua_continuous_error[proxy_index][ua_index] != -1:
@@ -125,7 +125,7 @@ class ProxyMiddleware(object):
                 if len(list(1 for i in self.proxy_ua_continuous_error[proxy_index] if i >= continuous_error_max)) >= len(user_agent)*0.8:
                     #self.update_proxy(u'HTTP_ERROR', request, response_status_message(response.status))
                     if self.proxy_allowed[proxy_index]:
-                        print "***********ua banned at ip%s, url length=%d**************" % (last_proxy,self.proxy_lastminute_url_length[proxy_index])
+                        print ("***********ua banned at ip%s, url length=%d**************" % (last_proxy,self.proxy_lastminute_url_length[proxy_index]))
                         self.proxy_allowed[proxy_index] = 0
                     pass
 
@@ -139,7 +139,7 @@ class ProxyMiddleware(object):
                     self.proxy_ua_continuous_error[proxy_index][ua_index] += 1
                 if len(list(1 for i in self.proxy_ua_continuous_error[proxy_index] if i >= continuous_error_max)) >= len(user_agent)*0.8:
                     if self.proxy_allowed[proxy_index]:
-                        print "***********ip banned at ip%s, url length=%d**************" % (last_proxy,self.proxy_lastminute_url_length[proxy_index])
+                        print ("***********ip banned at ip%s, url length=%d**************" % (last_proxy,self.proxy_lastminute_url_length[proxy_index]))
                         self.proxy_allowed[proxy_index] = 0
                     #self.update_proxy(u'IP_BANNED', request, response_status_message(response.status))
 
@@ -181,8 +181,8 @@ class ProxyMiddleware(object):
         return self.retry_request(request)
 
     def update_proxy(self,errortype,request,reason):
-        print "**********update proxy************"
-        print reason
+        print ("**********update proxy************")
+        print (reason)
         last_proxy = request.meta['proxy'].strip('https://')
         last_ua = request.headers['User-Agent']
         proxy_index = self.proxy_pool.index(last_proxy)
@@ -250,9 +250,9 @@ class ProxyMiddleware(object):
 
 
         if len(allowed_proxy_index)==0:
-            print "********WARNING: IP BANNED, PAUSE*********"
+            print ("********WARNING: IP BANNED, PAUSE*********")
             sleeptime=60-start_time+max(self.proxy_lastminute)
-            print "sleep:%d" % sleeptime
+            print ("sleep:%d" % sleeptime)
             time.sleep(sleeptime)
             return self.retry_request(request)
         proxy_index = random.sample(allowed_proxy_index, 1)[0]
