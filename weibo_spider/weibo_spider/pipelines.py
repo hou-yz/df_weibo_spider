@@ -28,12 +28,13 @@ class WeiboSpiderPipeline(object):#using df industry as db
         self.cursor.execute("SET CHARACTER SET utf8mb4")
         self.cursor.execute("SET character_set_connection=utf8mb4")
         self.batched_pages = 0
-        self.s=[]
+        self.s=list([] for i in range(10))
         self.s_edges=[]
         fp = open("edges.log", "wb+")
         fp.close()
 
     def process_item(self, item, spider):
+        sql=['']*10
         start_time=time.time()
         response = item['response']
         src = response[u'cardlistInfo'][u'containerid'].split('_')[-1]
@@ -42,8 +43,8 @@ class WeiboSpiderPipeline(object):#using df industry as db
         # user info part
         if isinstance(item, userinfoItem):
             users = content[-1][u'card_group']
-            sql = "INSERT INTO df_weibo_%s_test " % item['kind']
-            sql += "(uid,screen_name,gender,verified_reason,follow_cnt, followers_cnt, statuses_cnt) VALUES (%s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE screen_name=VALUES(screen_name), verified_reason=VALUES(verified_reason) ,follow_cnt=VALUES(follow_cnt), followers_cnt=VALUES(followers_cnt), statuses_cnt=VALUES(statuses_cnt)"
+            sql[0] = "INSERT INTO df_weibo_%s_test " % item['kind']
+            sql[0] += "(uid,screen_name,gender,verified_reason,follow_cnt, followers_cnt, statuses_cnt) VALUES (%s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE screen_name=VALUES(screen_name), verified_reason=VALUES(verified_reason) ,follow_cnt=VALUES(follow_cnt), followers_cnt=VALUES(followers_cnt), statuses_cnt=VALUES(statuses_cnt)"
             i=0
             while i < len(users):
 
@@ -59,8 +60,8 @@ class WeiboSpiderPipeline(object):#using df industry as db
                         verified_reason = user[u'verified_reason']
                     else:
                         verified_reason = '-1'
-                    self.s.append([uid.encode('utf-8'), screen_name.encode('utf-8'), gender.encode('utf-8'),
-                              verified_reason.encode('utf-8'), follow_cnt, followers_cnt, status_cnt])
+                    self.s[0].append([uid, screen_name, gender,
+                              verified_reason, follow_cnt, followers_cnt, status_cnt])
                     #src follower
                     edge=uid+'-'+src+'\n'
                     #followed by src
@@ -75,7 +76,7 @@ class WeiboSpiderPipeline(object):#using df industry as db
 
         #tweet part
         elif isinstance(item, tweetItem):
-            sql = 'INSERT INTO df_weibo_tweets_followed (uid,screen_name,tweet_id,created_at,text,url,likes,comments_cnt,retweeted) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE  screen_name=VALUES(screen_name), likes=VALUES(likes), comments_cnt=VALUES(comments_cnt)'
+            sql = list('INSERT INTO df_weibo_tweets_%d ' % i +'(uid,screen_name,tweet_id,created_at,text,url,likes,comments_cnt,retweeted) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE  screen_name=VALUES(screen_name), likes=VALUES(likes), comments_cnt=VALUES(comments_cnt)' for i in range(10))
             i = 0
             while i < len(content):
                 if u'mblog' not in content[i]:
@@ -116,9 +117,9 @@ class WeiboSpiderPipeline(object):#using df industry as db
                         retweeted = tweet[u'retweeted_status'][u'text'].replace('\'','')
                     else:
                         retweeted = '-1'
-                    self.s.append([uid.encode('utf-8'), screen_name.encode('utf-8'), tweet_id.encode('utf-8'),
-                              created_at.encode('utf-8'), text.encode('utf-8'), url.encode('utf-8'),
-                              likes, comments_cnt, retweeted.encode('utf-8')])
+                    self.s[int(uid)%10].append([uid, screen_name, tweet_id,
+                              created_at, text, url,
+                              likes, comments_cnt, retweeted])
                 except:
                     pass
 
@@ -127,9 +128,11 @@ class WeiboSpiderPipeline(object):#using df industry as db
 
 
         if self.batched_pages > batch_page_max:
+            start_time = time.time()
             print ("***********writing %d pages into MYSQL***********" % batch_page_max)
             try:
-                self.cursor.executemany(sql, self.s)
+                for i in range (10):
+                    self.cursor.executemany(sql[i], self.s[i])
                 self.connect.commit()
             except pymysql.InternalError as e:
                 print ("Error %d: %s" % (e.args[0], e.args[1]))
@@ -142,13 +145,14 @@ class WeiboSpiderPipeline(object):#using df industry as db
                 finally:
                     pass
             self.batched_pages = 0
-            self.s=[]
+            self.s=list([] for i in range(10))
             self.s_edges=[]
             pass
+            end_time = time.time()
+            delta = end_time - start_time
+            print (delta)
 
-        end_time=time.time()
-        delta=end_time-start_time
-        #print delta
+
         return
 
         #return item
