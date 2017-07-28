@@ -47,8 +47,8 @@ user_agent = [
     ]
 timeout_error_max = len(user_agent)*0.3
 continuous_error_max = 4
-proxy_pool_length = 8
-proxy_lastminute_min_url_length = 500000
+proxy_pool_length = 4
+lastminute_min_url_length = 500000
 
 
 class ProxyMiddleware(object):
@@ -63,12 +63,12 @@ class ProxyMiddleware(object):
 
     def __init__(self):
         t=requests.get('http://http.zhimadaili.com/getip?num=%s&type=1&pro=&city=0&yys=0&port=1&time=2' % (str(proxy_pool_length))).content
-        t=t.split('<br/>\r\n')
+        t=t.decode('utf8').split('<br/>\r\n')
         del t[len(t)-1]
         fp = open('info.log', 'wb+')
-        fp.write('********************************************************************\n')
+        fp.write('********************************************************************\n'.encode('utf-8'))
         for line in t:
-            fp.write('%s\tnew\t\t%s\n' % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),line))
+            fp.write(('%s\tnew\t\t%s\n' % (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),line)).encode('utf-8'))
             self.proxy_ua_continuous_error.append(list(0 for i in range(0,len(user_agent))))
             self.proxy_lastminute_url_length.append(0)
             self.proxy_start_time.append(time.time())
@@ -76,7 +76,7 @@ class ProxyMiddleware(object):
             self.proxy_allowed.append(1)
         self.proxy_pool.extend(t)
 
-        fp.write('********************************************************************\n')
+        fp.write('********************************************************************\n'.encode('utf-8'))
         fp.close()
         pass
 
@@ -170,7 +170,7 @@ class ProxyMiddleware(object):
             if self.proxy_ua_continuous_error[proxy_index][ua_index] != -1:
                 self.proxy_ua_continuous_error[proxy_index][ua_index] = -1
             if len(list(1 for i in self.proxy_ua_continuous_error[proxy_index] if i == -1)) >= timeout_error_max \
-                    and self.proxy_lastminute_url_length[proxy_index] < proxy_lastminute_min_url_length \
+                    and self.proxy_lastminute_url_length[proxy_index] < lastminute_min_url_length \
                     and time.time() - self.proxy_start_time[proxy_index] > 20*60:
                 self.update_proxy(u'TIMEOUT', request, exception)
 
@@ -189,7 +189,7 @@ class ProxyMiddleware(object):
         if last_proxy not in self.outdated_pool:
             self.outdated_pool.append(last_proxy)
             fp = open('info.log', 'ab+')
-            fp.write(
+            fp.write((
                 "%(time)s [%(error)s]\r\n %(url)s reason: %(reason)s \r\n%(ip)s total url length:%(url_length)s lifetime:%(lifetime)s\r\n" %
                 {'time': time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())),
                  'error': errortype,
@@ -197,10 +197,10 @@ class ProxyMiddleware(object):
                  'reason': reason,
                  'ip': (request.meta['proxy']).strip('\r\n'),
                  'url_length': self.proxy_lastminute_url_length[proxy_index],
-                 'lifetime':time.strftime('%H:%M:%S', time.localtime(time.time() - self.proxy_start_time[proxy_index] - 8*3600))})
-            fp.write('%s\toutdated:%s' %
-                     (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), str(self.outdated_pool.__len__())))
-            fp.write('********************************************************************\n')
+                 'lifetime':time.strftime('%H:%M:%S', time.localtime(time.time() - self.proxy_start_time[proxy_index] - 8*3600))}).encode('utf-8'))
+            fp.write(('%s\toutdated:%s' %
+                     (time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), str(self.outdated_pool.__len__()))).encode('utf-8'))
+            fp.write('********************************************************************\n'.encode('utf-8'))
             fp.close()
         # del and add new proxy
         del self.proxy_pool[proxy_index]
@@ -213,7 +213,7 @@ class ProxyMiddleware(object):
             #time.sleep(1.1)
             t = requests.get('http://http.zhimadaili.com/getip?num=%s&type=1&pro=&city=0&yys=0&port=1&time=2' % (
                     str(int(proxy_pool_length / 4)))).content
-            t = t.split('<br/>\r\n')
+            t = t.decode('utf-8').split('<br/>\r\n')
             del t[len(t) - 1]
             if t not in self.outdated_pool:
                 self.proxy_pool.extend(t)
@@ -226,8 +226,8 @@ class ProxyMiddleware(object):
 
             fp = open('info.log', 'ab+')
             for line in t:
-                fp.write('%s\tnew\t\t%s\r\n' % (
-                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), line))
+                fp.write(('%s\tnew\t\t%s\r\n' % (
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(time.time())), line)).encode('utf-8'))
             fp.close()
 
             pass

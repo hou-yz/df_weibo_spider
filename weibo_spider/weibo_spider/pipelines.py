@@ -16,7 +16,7 @@ db_port = '3306'
 db_name = 'dingfu_industry'
 db_default_character_set = 'utf8mb4'
 
-batch_page_max = 1
+batch_page_max = 10
 
 
 class WeiboSpiderPipeline(object):#using df industry as db
@@ -75,7 +75,7 @@ class WeiboSpiderPipeline(object):#using df industry as db
 
         #tweet part
         elif isinstance(item, tweetItem):
-            sql = 'INSERT INTO df_weibo_tweets (uid,screen_name,tweet_id,created_at,text,url,likes,comments_cnt,retweeted) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE  screen_name=VALUES(screen_name), likes=VALUES(likes), comments_cnt=VALUES(comments_cnt)'
+            sql = 'INSERT INTO df_weibo_tweets_followed (uid,screen_name,tweet_id,created_at,text,url,likes,comments_cnt,retweeted) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON DUPLICATE KEY UPDATE  screen_name=VALUES(screen_name), likes=VALUES(likes), comments_cnt=VALUES(comments_cnt)'
             i = 0
             while i < len(content):
                 if u'mblog' not in content[i]:
@@ -90,12 +90,15 @@ class WeiboSpiderPipeline(object):#using df industry as db
                 if u'今天' in creat_time:
                     creat_time = time.strftime('%Y-%m-%d', time.localtime(time.time())) + creat_time.strip(u'今天')
                     pass
-                elif u'前' in creat_time:
+                elif u'分钟前' in creat_time:
                     creat_time = time.strftime('%Y-%m-%d %H:%M',
                                                time.localtime(time.time() - 60 * int(creat_time.strip(u'分钟前'))))
                     # self.continue_flag = 0
                     # return
                     pass
+                elif u'小时前' in creat_time:
+                    creat_time = time.strftime('%Y-%m-%d %H:%M',
+                                               time.localtime(time.time() - 60*60 * int(creat_time.strip(u'小时前'))))
                 elif len(creat_time) <= 12:
                     creat_time = time.strftime('%Y-', time.localtime(time.time())) + creat_time
                     pass

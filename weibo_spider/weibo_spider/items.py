@@ -7,7 +7,6 @@
 
 from scrapy.item import Item, Field
 
-
 class userinfoItem(Item):
     # userinfo for mysql
     response = Field()
