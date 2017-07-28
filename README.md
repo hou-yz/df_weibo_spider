@@ -8,3 +8,4 @@ crawl tweets from users.
 
 i use proxy pool so as to improve it's efficient speed wise.
 
+2017.07.28 added mysql sharding support
