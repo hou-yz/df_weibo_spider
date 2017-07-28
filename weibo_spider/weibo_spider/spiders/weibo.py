@@ -15,8 +15,9 @@ db_port = '3306'
 db_name = 'dingfu_industry'
 
 kind = 'tweets'
+#kind='src_pos''src_neg''followed_by_src''src_follower''tweets'
 
-increment = 1
+increment = 0
 
 
 class WeiboSpider(Spider):
@@ -52,7 +53,7 @@ class WeiboSpider(Spider):
                                   use_unicode=True)
         cursor = connect.cursor()
         # uid,screen_name,gender,verified_reason,follow_cnt,followers_cnt,statuses_cnt
-        cursor.execute("SELECT * FROM df_weibo_src_test")
+        cursor.execute("SELECT * FROM df_weibo_src_pos_test")
         data = cursor.fetchall()
         for line in data:
             self.src_user_uid.append(line[1])
